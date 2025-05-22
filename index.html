@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>نظام الري الذكي</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(to bottom right, #e8f5e9, #d0f0fd);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 400px;
+      background-color: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      text-align: center;
+      direction: rtl;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #00b894;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .status {
+      margin: 20px 0;
+      font-size: 18px;
+    }
+
+    .alert {
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 15px;
+      color: #d63031;
+    }
+
+    #dashboard {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="login">
+    <h2>تسجيل الدخول</h2>
+    <form onsubmit="login(event)">
+      <input type="text" id="username" placeholder="اسم المستخدم" required><br>
+      <input type="password" id="password" placeholder="كلمة المرور" required><br>
+      <button type="submit">دخول</button>
+    </form>
+    <div class="alert" id="loginError" style="display:none;">خطأ في اسم المستخدم أو كلمة المرور</div>
+  </div>
+
+  <div class="container" id="dashboard">
+    <h2>مرحبًا <span id="usernameDisplay"></span></h2>
+    <div class="status">
+      درجة الحرارة: <span id="temp">--</span> °C<br>
+      رطوبة التربة: <span id="humidity">--</span> %
+    </div>
+    <div class="status">
+      حالة المضخة: <span id="pumpStatus" style="font-weight:bold;">--</span><br><br>
+      <button onclick="togglePump()">تبديل حالة المضخة</button>
+    </div>
+  </div>
+
+  <script>
+    const users = {
+      user1: { password: 'pass1', deviceIP: 'http://192.168.1.100' },
+      user2: { password: 'pass2', deviceIP: 'http://192.168.1.101' }
+    };
+
+    let pumpOn = false;
+    let deviceIP = '';
+
+    function login(event) {
+      event.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (users[username] && users[username].password === password) {
+        localStorage.setItem('loggedInUser', username);
+        deviceIP = users[username].deviceIP;
+        localStorage.setItem('deviceIP', deviceIP);
+        showDashboard();
+      } else {
+        document.getElementById('loginError').style.display = 'block';
+      }
+    }
+
+    function showDashboard() {
+      const user = localStorage.getItem('loggedInUser');
+      deviceIP = localStorage.getItem('deviceIP');
+
+      if (user && deviceIP) {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('usernameDisplay').innerText = user;
+
+        fetch(${deviceIP}/sensors)
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('temp').innerText = data.temp;
+            document.getElementById('humidity').innerText = data.humidity;
+          });
+
+        fetch(${deviceIP}/pump/status)
+          .then(res => res.text())
+          .then(status => {
+            pumpOn = status === 'on';
+            updatePumpStatusText();
+          });
+      }
+    }
+
+    function togglePump() {
+      pumpOn = !pumpOn;
+      updatePumpStatusText();
+      fetch(${deviceIP}/pump?status=${pumpOn ? 'on' : 'off'});
+    }
+
+    function updatePumpStatusText() {
+      const status = document.getElementById('pumpStatus');
+      status.innerText = pumpOn ? 'تشغيل' : 'إيقاف';
+      status.style.color = pumpOn ? '#00b894' : '#d63031';
+    }
+
+    window.onload = () => {
+      if (localStorage.getItem('loggedInUser') && localStorage.getItem('deviceIP')) {
+        showDashboard();
+      }
+    };
+  </script>
+</body>
+</html>
