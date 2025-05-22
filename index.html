@@ -1,3 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام الري الذكي</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f1f1f1; direction: rtl; font-family: 'Tajawal', sans-serif; }
+    .login-container, .dashboard-container { max-width: 500px; margin: auto; padding: 20px; background: white; border-radius: 10px; margin-top: 50px; }
+    .notification { padding: 10px; margin-top: 10px; border-radius: 5px; }
+    .notification.success { background-color: #d4edda; color: #155724; }
+    .notification.error { background-color: #f8d7da; color: #721c24; }
+    .pump-status.on { color: green; font-weight: bold; }
+    .pump-status.off { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div id="login" class="login-container">
+  <h2 id="loginTitle">تسجيل الدخول</h2>
+  <form onsubmit="login(event)">
+    <div class="mb-3">
+      <label id="labelUsername" for="username" class="form-label">اسم المستخدم</label>
+      <input type="text" id="username" class="form-control" required />
+    </div>
+    <div class="mb-3">
+      <label id="labelPassword" for="password" class="form-label">كلمة المرور</label>
+      <input type="password" id="password" class="form-control" required />
+    </div>
+    <button type="submit" id="loginBtn" class="btn btn-primary w-100">دخول</button>
+  </form>
+</div>
+
+<div id="dashboard" class="dashboard-container" style="display: none;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 id="dashboardTitle">لوحة التحكم</h2>
+    <button onclick="logout()" id="logoutBtn" class="btn btn-outline-danger btn-sm">تسجيل الخروج</button>
+  </div>
+  <p><span id="welcomeText">مرحباً</span>، <strong id="usernameDisplay"></strong></p>
+  
+  <div class="mb-3">
+    <h5 id="sensorReadingsTitle">قراءات الحساسات</h5>
+    <p id="tempLabel">درجة الحرارة: <span id="temp">--</span>°C</p>
+    <p id="humidityLabel">رطوبة التربة: <span id="humidity">--</span>%</p>
+  </div>
+
+  <div class="mb-3">
+    <h5 id="pumpControlTitle">التحكم في المضخة</h5>
+    <p id="pumpStatusLabel">حالة المضخة: <span id="pumpStatus" class="pump-status off">متوقفة</span></p>
+    <button onclick="togglePump()" id="togglePumpBtn" class="btn btn-success w-100">تشغيل / إيقاف</button>
+    <p class="mt-2" id="lastRunText"></p>
+  </div>
+
+  <div id="notificationsDiv"></div>
+  <button onclick="toggleLang()" id="langSwitch" class="btn btn-secondary btn-sm mt-3">EN</button>
+</div>
+
 <script>
   const users = {
     user1: 'pass1',
@@ -6,26 +64,73 @@
 
   let pumpOn = false;
   let currentLang = 'ar';
+  const humidityThreshold = 40;
+
+  const texts = {
+    ar: {
+      projectName: 'نظام الري الذكي',
+      loginTitle: 'تسجيل الدخول',
+      labelUsername: 'اسم المستخدم',
+      labelPassword: 'كلمة المرور',
+      loginBtn: 'دخول',
+      dashboardTitle: 'لوحة التحكم',
+      welcomeText: 'مرحباً',
+      sensorReadingsTitle: 'قراءات الحساسات',
+      tempLabel: 'درجة الحرارة:',
+      humidityLabel: 'رطوبة التربة:',
+      pumpControlTitle: 'التحكم في المضخة',
+      pumpStatusLabel: 'حالة المضخة:',
+      pumpOn: 'تعمل',
+      pumpOff: 'متوقفة',
+      togglePumpBtn: 'تشغيل / إيقاف',
+      logoutBtn: 'تسجيل الخروج',
+      loginError: 'اسم المستخدم أو كلمة المرور غير صحيحة',
+      lastRunText: 'آخر وقت ري:',
+      notificationPumpOn: 'تم تشغيل المضخة',
+      notificationPumpOff: 'تم إيقاف المضخة',
+      notificationLowHumidity: 'تحذير: رطوبة التربة منخفضة'
+    },
+    en: {
+      projectName: 'Smart Irrigation System',
+      loginTitle: 'Login',
+      labelUsername: 'Username',
+      labelPassword: 'Password',
+      loginBtn: 'Login',
+      dashboardTitle: 'Dashboard',
+      welcomeText: 'Welcome',
+      sensorReadingsTitle: 'Sensor Readings',
+      tempLabel: 'Temperature:',
+      humidityLabel: 'Soil Moisture:',
+      pumpControlTitle: 'Pump Control',
+      pumpStatusLabel: 'Pump Status:',
+      pumpOn: 'On',
+      pumpOff: 'Off',
+      togglePumpBtn: 'Toggle Pump',
+      logoutBtn: 'Logout',
+      loginError: 'Invalid username or password',
+      lastRunText: 'Last Run:',
+      notificationPumpOn: 'Pump turned ON',
+      notificationPumpOff: 'Pump turned OFF',
+      notificationLowHumidity: 'Warning: Low soil moisture'
+    }
+  };
 
   function showNotification(message, type = 'success') {
     const notif = document.createElement('div');
     notif.className = notification ${type};
     notif.innerText = message;
     notificationsDiv.appendChild(notif);
-    setTimeout(() => {
-      notif.remove();
-    }, 5000);
+    setTimeout(() => notif.remove(), 5000);
   }
 
   function login(event) {
     event.preventDefault();
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value.trim();
-
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
     if (users[username] && users[username] === password) {
-      document.getElementById('login').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-      document.getElementById('usernameDisplay').innerText = username;
+      loginDiv.style.display = 'none';
+      dashboardDiv.style.display = 'block';
+      usernameDisplay.innerText = username;
       loadLang(currentLang);
       loadLastRun();
       fetchSensorData();
@@ -35,10 +140,10 @@
   }
 
   function logout() {
-    document.getElementById('login').style.display = 'block';
-    document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
+    loginDiv.style.display = 'block';
+    dashboardDiv.style.display = 'none';
+    usernameInput.value = '';
+    passwordInput.value = '';
   }
 
   function toggleLang() {
@@ -47,21 +152,21 @@
   }
 
   function loadLang(lang) {
-    document.getElementById('projectTitle').innerText = texts[lang].projectName;
-    document.getElementById('loginTitle').innerText = texts[lang].loginTitle;
-    document.getElementById('labelUsername').innerText = texts[lang].labelUsername;
-    document.getElementById('labelPassword').innerText = texts[lang].labelPassword;
-    document.getElementById('loginBtn').innerText = texts[lang].loginBtn;
-    document.getElementById('dashboardTitle').innerText = texts[lang].dashboardTitle;
-    document.getElementById('welcomeText').innerText = texts[lang].welcomeText;
-    document.getElementById('sensorReadingsTitle').innerText = texts[lang].sensorReadingsTitle;
-    document.getElementById('tempLabel').innerText = texts[lang].tempLabel;
-    document.getElementById('humidityLabel').innerText = texts[lang].humidityLabel;
-    document.getElementById('pumpControlTitle').innerText = texts[lang].pumpControlTitle;
-    document.getElementById('pumpStatusLabel').innerText = texts[lang].pumpStatusLabel;
-    document.getElementById('togglePumpBtn').innerText = texts[lang].togglePumpBtn;
-    document.getElementById('logoutBtn').innerText = texts[lang].logoutBtn;
-    document.getElementById('langSwitch').innerText = lang === 'ar' ? 'ع' : 'EN';
+    document.title = texts[lang].projectName;
+    loginTitle.innerText = texts[lang].loginTitle;
+    labelUsername.innerText = texts[lang].labelUsername;
+    labelPassword.innerText = texts[lang].labelPassword;
+    loginBtn.innerText = texts[lang].loginBtn;
+    dashboardTitle.innerText = texts[lang].dashboardTitle;
+    welcomeText.innerText = texts[lang].welcomeText;
+    sensorReadingsTitle.innerText = texts[lang].sensorReadingsTitle;
+    tempLabel.innerText = texts[lang].tempLabel;
+    humidityLabel.innerText = texts[lang].humidityLabel;
+    pumpControlTitle.innerText = texts[lang].pumpControlTitle;
+    pumpStatusLabel.innerText = texts[lang].pumpStatusLabel;
+    togglePumpBtn.innerText = texts[lang].togglePumpBtn;
+    logoutBtn.innerText = texts[lang].logoutBtn;
+    langSwitch.innerText = lang === 'ar' ? 'EN' : 'ع';
     updatePumpStatus();
     updateLastRunText();
   }
@@ -79,15 +184,17 @@
     const pumpStatus = document.getElementById('pumpStatus');
     if (pumpOn) {
       pumpStatus.classList.remove('off');
+      pumpStatus.classList.add('on');
       pumpStatus.innerText = texts[currentLang].pumpOn;
     } else {
+      pumpStatus.classList.remove('on');
       pumpStatus.classList.add('off');
       pumpStatus.innerText = texts[currentLang].pumpOff;
     }
   }
 
   function fetchSensorData() {
-    // Mocked values, replace with your ThingSpeak API fetch
+    // Mocked values – replace with ThingSpeak API
     const temp = Math.floor(20 + Math.random() * 10);
     const humidity = Math.floor(30 + Math.random() * 40);
     document.getElementById('temp').innerText = temp;
@@ -97,14 +204,12 @@
       showNotification(texts[currentLang].notificationLowHumidity, 'error');
     }
 
-    setTimeout(fetchSensorData, 10000); // Refresh every 10s
+    setTimeout(fetchSensorData, 10000);
   }
 
   function loadLastRun() {
     const last = localStorage.getItem('lastRun');
-    if (last) {
-      document.getElementById('lastRunText').innerText = ${texts[currentLang].lastRunText} ${last};
-    }
+    if (last) updateLastRunText();
   }
 
   function updateLastRunText() {
@@ -113,4 +218,13 @@
       document.getElementById('lastRunText').innerText = ${texts[currentLang].lastRunText} ${last};
     }
   }
+
+  // Shortcuts
+  const loginDiv = document.getElementById('login');
+  const dashboardDiv = document.getElementById('dashboard');
+  const usernameInput = document.getElementById('username');
+  const passwordInput = document.getElementById('password');
 </script>
+
+</body>
+</html>
