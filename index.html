@@ -17,9 +17,55 @@
       color: white;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       min-height: 100vh;
       direction: rtl;
+      padding-top: 70px; /* لإفساح مساحة للرأس */
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(90deg, #0072ff, #00c6ff);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+      user-select: none;
+    }
+
+    .project-title {
+      font-size: 1.6em;
+      font-weight: 700;
+      color: white;
+      font-family: 'Segoe UI Black', Tahoma, Geneva, Verdana, sans-serif;
+      letter-spacing: 1.5px;
+    }
+
+    .lang-switch {
+      background-color: white;
+      color: #0072ff;
+      border: none;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 38px;
+      height: 38px;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s ease;
+    }
+
+    .lang-switch:hover {
+      background-color: #d0e7ff;
     }
 
     .container {
@@ -30,14 +76,6 @@
       max-width: 450px;
       box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
       position: relative;
-    }
-
-    .project-title {
-      font-size: 1.4em;
-      font-weight: bold;
-      text-align: center;
-      margin-bottom: 20px;
-      user-select: none;
     }
 
     h2 {
@@ -60,6 +98,7 @@
       margin-bottom: 10px;
       background-color: #2e2e44;
       color: white;
+      font-size: 1em;
     }
 
     button {
@@ -73,6 +112,7 @@
       cursor: pointer;
       margin-top: 15px;
       transition: 0.3s ease;
+      font-size: 1em;
     }
 
     button:hover {
@@ -112,25 +152,7 @@
       margin-top: 10px;
       display: none;
       text-align: center;
-    }
-
-    .lang-switch {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-      background-color: #0072ff;
-      border: none;
-      color: white;
-      font-weight: bold;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      user-select: none;
-      transition: 0.3s ease;
-    }
-
-    .lang-switch:hover {
-      background-color: #005bb5;
+      font-size: 0.95em;
     }
 
     @media screen and (max-width: 500px) {
@@ -141,19 +163,21 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <button class="lang-switch" onclick="toggleLanguage()">EN</button>
+  <header>
     <div class="project-title" id="projectTitle">Smart Planting</div>
+    <button class="lang-switch" onclick="toggleLanguage()">EN</button>
+  </header>
 
+  <div class="container">
     <!-- تسجيل الدخول -->
     <div id="login">
       <h2 id="loginTitle">تسجيل الدخول</h2>
       <form onsubmit="return login(event)">
         <label id="usernameLabel">اسم المستخدم</label>
-        <input type="text" id="username" required />
+        <input type="text" id="username" required autocomplete="username" />
 
         <label id="passwordLabel">كلمة المرور</label>
-        <input type="password" id="password" required />
+        <input type="password" id="password" required autocomplete="current-password" />
 
         <button type="submit" id="loginBtn">دخول</button>
         <p id="errorMsg"></p>
@@ -271,4 +295,63 @@
         localStorage.setItem("loggedInUser", username);
         showDashboard();
       } else {
-        errorMsg.innerText = texts[currentLang].errorWrong
+        errorMsg.innerText = texts[currentLang].errorWrong;
+        errorMsg.style.display = "block";
+      }
+    }
+
+    function showDashboard() {
+      const username = localStorage.getItem("loggedInUser");
+      if (!username) {
+        showLogin();
+        return;
+      }
+      document.getElementById("usernameDisplay").innerText = username;
+      document.getElementById("login").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+
+      updatePumpStatus();
+    }
+
+    function showLogin() {
+      localStorage.removeItem("loggedInUser");
+      document.getElementById("login").style.display = "block";
+      document.getElementById("dashboard").style.display = "none";
+      document.getElementById("errorMsg").style.display = "none";
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    }
+
+    function logout() {
+      showLogin();
+    }
+
+    function togglePump() {
+      pumpOn = !pumpOn;
+      updatePumpStatus();
+    }
+
+    function updatePumpStatus() {
+      const pumpStatusElem = document.getElementById("pumpStatus");
+      const pumpStatusText = document.getElementById("pumpStatusText");
+      if (pumpOn) {
+        pumpStatusElem.innerText = texts[currentLang].pumpStatusOn;
+        pumpStatusElem.style.color = "#00ffae";
+      } else {
+        pumpStatusElem.innerText = texts[currentLang].pumpStatusOff;
+        pumpStatusElem.style.color = "#ff4e50";
+      }
+    }
+
+    // أول ما تحمل الصفحة، شغل ترجمة وشيك إذا في تسجيل دخول سابق
+    window.onload = function() {
+      translateUI();
+      if (localStorage.getItem("loggedInUser")) {
+        showDashboard();
+      } else {
+        showLogin();
+      }
+    };
+  </script>
+</body>
+</html>
