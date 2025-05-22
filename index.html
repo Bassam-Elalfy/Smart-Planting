@@ -9,7 +9,6 @@
       box-sizing: border-box;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
     body {
       margin: 0;
       padding: 0;
@@ -21,7 +20,6 @@
       min-height: 100vh;
       direction: rtl;
     }
-
     .container {
       background-color: #1e1e2f;
       padding: 30px;
@@ -31,13 +29,10 @@
       box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
       position: relative;
     }
-
     h2 {
       text-align: center;
       margin-bottom: 25px;
     }
-
-    /* اسم المشروع فوق */
     .project-title {
       position: absolute;
       top: 12px;
@@ -47,13 +42,11 @@
       color: #00c6ff;
       user-select: none;
     }
-
     label {
       display: block;
       margin-bottom: 5px;
       margin-top: 15px;
     }
-
     input {
       width: 100%;
       padding: 10px;
@@ -64,11 +57,9 @@
       background-color: #2e2e44;
       color: white;
     }
-
     button {
       width: 100%;
       padding: 12px;
-      background: #00c6ff;
       background: linear-gradient(to right, #0072ff, #00c6ff);
       border: none;
       border-radius: 6px;
@@ -78,16 +69,13 @@
       margin-top: 15px;
       transition: 0.3s ease;
     }
-
     button:hover {
       transform: scale(1.03);
       box-shadow: 0 0 10px #00c6ff;
     }
-
     #dashboard {
       display: none;
     }
-
     .sensor-box,
     .control-box {
       background-color: #2e2e44;
@@ -95,28 +83,25 @@
       padding: 15px;
       margin-top: 20px;
     }
-
     .status {
       font-weight: bold;
       font-size: 1.2em;
       color: #00ffae;
     }
-
+    .status.off {
+      color: #ff4e50;
+    }
     .logout {
-      background: #ff4e50;
       background: linear-gradient(to right, #f85032, #e73827);
     }
-
     .sensor-label {
       color: #aaa;
     }
-
-    /* زر اللغة */
     .lang-switch {
       position: absolute;
       top: 10px;
       right: 20px;
-      background-color: #005bbb; /* أزرق داكن */
+      background-color: #005bbb;
       color: white;
       border: none;
       font-weight: 700;
@@ -133,12 +118,50 @@
       box-shadow: 0 0 8px rgba(0, 91, 187, 0.7);
       user-select: none;
     }
-
     .lang-switch:hover {
-      background-color: #0072ff; /* أزرق أفتح */
+      background-color: #0072ff;
       box-shadow: 0 0 12px rgba(0, 114, 255, 0.9);
     }
-
+    #notifications {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 450px;
+      z-index: 1000;
+    }
+    .notification {
+      background-color: #333;
+      border-radius: 8px;
+      padding: 12px 15px;
+      margin-bottom: 10px;
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      opacity: 0.95;
+      animation: fadein 0.5s, fadeout 0.5s 4.5s;
+    }
+    .notification.error {
+      background-color: #ff4e50;
+    }
+    .notification.success {
+      background-color: #00c6ff;
+    }
+    .last-run {
+      font-size: 0.9em;
+      color: #aaa;
+      margin-top: 10px;
+      text-align: center;
+    }
+    @keyframes fadein {
+      from {opacity: 0;}
+      to {opacity: 0.95;}
+    }
+    @keyframes fadeout {
+      from {opacity: 0.95;}
+      to {opacity: 0;}
+    }
     @media screen and (max-width: 500px) {
       .container {
         padding: 20px;
@@ -147,54 +170,36 @@
   </style>
 </head>
 <body>
+  <div id="notifications"></div>
   <div class="container">
     <div class="project-title" id="projectTitle">Smart Planting</div>
-
     <button class="lang-switch" id="langSwitch" onclick="toggleLang()">ع</button>
 
-    <!-- تسجيل الدخول -->
     <div id="login">
       <h2 id="loginTitle">تسجيل الدخول</h2>
       <form onsubmit="return login(event)">
         <label id="labelUsername">اسم المستخدم</label>
         <input type="text" id="username" required />
-
         <label id="labelPassword">كلمة المرور</label>
         <input type="password" id="password" required />
-
         <button type="submit" id="loginBtn">دخول</button>
       </form>
     </div>
 
-    <!-- لوحة التحكم -->
     <div id="dashboard">
       <h2 id="dashboardTitle">لوحة تحكم الري الذكي</h2>
-      <p>
-        <span id="welcomeText">مرحبًا،</span>
-        <span id="usernameDisplay"></span>
-      </p>
-
+      <p><span id="welcomeText">مرحبًا،</span> <span id="usernameDisplay"></span></p>
       <div class="sensor-box">
         <h3 id="sensorReadingsTitle">قراءات الحساسات</h3>
-        <p>
-          <span class="sensor-label" id="tempLabel">درجة الحرارة:</span>
-          <span id="temp" class="status">--</span> °C
-        </p>
-        <p>
-          <span class="sensor-label" id="humidityLabel">الرطوبة:</span>
-          <span id="humidity" class="status">--</span> %
-        </p>
+        <p><span class="sensor-label" id="tempLabel">درجة الحرارة:</span> <span id="temp" class="status">--</span> °C</p>
+        <p><span class="sensor-label" id="humidityLabel">الرطوبة:</span> <span id="humidity" class="status">--</span> %</p>
       </div>
-
       <div class="control-box">
         <h3 id="pumpControlTitle">التحكم في المضخة</h3>
-        <p>
-          <span id="pumpStatusLabel">الحالة الحالية:</span>
-          <span id="pumpStatus" class="status">مطفأة</span>
-        </p>
+        <p><span id="pumpStatusLabel">الحالة الحالية:</span> <span id="pumpStatus" class="status off">مطفأة</span></p>
         <button onclick="togglePump()" id="togglePumpBtn">تشغيل / إيقاف</button>
+        <p class="last-run" id="lastRunText"></p>
       </div>
-
       <button class="logout" onclick="logout()" id="logoutBtn">تسجيل الخروج</button>
     </div>
   </div>
@@ -207,8 +212,9 @@
 
     let pumpOn = false;
     let currentLang = 'ar';
+    const humidityThreshold = 40; // % تحت هذا الرقم ترسل تنبيه رطوبة منخفضة
+    const notificationsDiv = document.getElementById('notifications');
 
-    // نصوص بالعربية والإنجليزية
     const texts = {
       ar: {
         projectName: 'Smart Planting',
@@ -229,6 +235,10 @@
         togglePumpBtn: 'تشغيل / إيقاف',
         logoutBtn: 'تسجيل الخروج',
         langButton: 'ع',
+        notificationPumpOn: 'تم تشغيل المضخة.',
+        notificationPumpOff: 'تم إيقاف المضخة.',
+        notificationLowHumidity: 'تنبيه: الرطوبة منخفضة!',
+        lastRunText: 'آخر تشغيل للمضخة: ',
       },
       en: {
         projectName: 'Smart Planting',
@@ -239,104 +249,4 @@
         loginError: '❌ Incorrect username or password',
         dashboardTitle: 'Smart Irrigation Dashboard',
         welcomeText: 'Welcome,',
-        sensorReadingsTitle: 'Sensor Readings',
-        tempLabel: 'Temperature:',
-        humidityLabel: 'Humidity:',
-        pumpControlTitle: 'Pump Control',
-        pumpStatusLabel: 'Current status:',
-        pumpOn: 'On',
-        pumpOff: 'Off',
-        togglePumpBtn: 'Toggle Pump',
-        logoutBtn: 'Logout',
-        langButton: 'EN',
-      },
-    };
-
-    function setLanguage(lang) {
-      currentLang = lang;
-      document.documentElement.lang = lang;
-      document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
-
-      // تحديث النصوص
-      document.getElementById('projectTitle').innerText = texts[lang].projectName;
-      document.getElementById('loginTitle').innerText = texts[lang].loginTitle;
-      document.getElementById('labelUsername').innerText = texts[lang].labelUsername;
-      document.getElementById('labelPassword').innerText = texts[lang].labelPassword;
-      document.getElementById('loginBtn').innerText = texts[lang].loginBtn;
-      document.getElementById('dashboardTitle').innerText = texts[lang].dashboardTitle;
-      document.getElementById('welcomeText').innerText = texts[lang].welcomeText;
-      document.getElementById('sensorReadingsTitle').innerText = texts[lang].sensorReadingsTitle;
-      document.getElementById('tempLabel').innerText = texts[lang].tempLabel;
-      document.getElementById('humidityLabel').innerText = texts[lang].humidityLabel;
-      document.getElementById('pumpControlTitle').innerText = texts[lang].pumpControlTitle;
-      document.getElementById('pumpStatusLabel').innerText = texts[lang].pumpStatusLabel;
-      document.getElementById('pumpStatus').innerText = pumpOn ? texts[lang].pumpOn : texts[lang].pumpOff;
-      document.getElementById('togglePumpBtn').innerText = texts[lang].togglePumpBtn;
-      document.getElementById('logoutBtn').innerText = texts[lang].logoutBtn;
-      document.getElementById('langSwitch').innerText = texts[lang].langButton;
-    }
-
-    function toggleLang() {
-      if (currentLang === 'ar') {
-        setLanguage('en');
-      } else {
-        setLanguage('ar');
-      }
-    }
-
-    function login(event) {
-      event.preventDefault();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-
-      if (users[username] === password) {
-        localStorage.setItem('loggedInUser', username);
-        showDashboard();
-      } else {
-        alert(texts[currentLang].loginError);
-      }
-    }
-
-    function showDashboard() {
-      const user = localStorage.getItem('loggedInUser');
-      if (user) {
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('usernameDisplay').innerText = user;
-
-        // بيانات مؤقتة للعرض - اربطها بقراءة من ESP32 لاحقًا
-        document.getElementById('temp').innerText = '27.5';
-        document.getElementById('humidity').innerText = '52';
-        document.getElementById('pumpStatus').innerText = pumpOn ? texts[currentLang].pumpOn : texts[currentLang].pumpOff;
-        document.getElementById('pumpStatus').style.color = pumpOn ? '#00ffae' : '#ff4e50';
-      } else {
-        document.getElementById('login').style.display = 'block';
-        document.getElementById('dashboard').style.display = 'none';
-      }
-    }
-
-    function togglePump() {
-      pumpOn = !pumpOn;
-      document.getElementById('pumpStatus').innerText = pumpOn ? texts[currentLang].pumpOn : texts[currentLang].pumpOff;
-      document.getElementById('pumpStatus').style.color = pumpOn ? '#00ffae' : '#ff4e50';
-
-      // هنا تقدر ترسل أمر للـ ESP32 باستخدام fetch()
-      // fetch(http://esp32.local/pump?status=${pumpOn ? 'on' : 'off'});
-    }
-
-    function logout() {
-      localStorage.removeItem('loggedInUser');
-      // بدل location.reload() نعرض شاشة تسجيل الدخول مباشرة
-      document.getElementById('dashboard').style.display = 'none';
-      document.getElementById('login').style.display = 'block';
-      document.getElementById('username').value = '';
-      document.getElementById('password').value = '';
-    }
-
-    window.onload = function () {
-      setLanguage('ar'); // البداية بالعربية
-      showDashboard();
-    };
-  </script>
-</body>
-</html>
+        sensorReadingsTitle:
